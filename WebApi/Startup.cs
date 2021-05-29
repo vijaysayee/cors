@@ -26,11 +26,13 @@ namespace WebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var allowedOrigins = Configuration.GetValue<string>("AllowedOrigins")?.Split(';') ?? new string[0];
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApi", Version = "v1" });
             });
+            services.AddCors(policy => policy.AddPolicy("SpecificDomainPolicy", builder => builder.WithOrigins(allowedOrigins)));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,6 +46,8 @@ namespace WebApi
             }
 
             app.UseHttpsRedirection();
+
+            app.UseCors("SpecificDomainPolicy");
 
             app.UseRouting();
 
