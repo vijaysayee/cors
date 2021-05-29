@@ -1,0 +1,38 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <div id="listDiv" class="card-deck">
+        <div class="card-body">
+            <h5 class="card-title">No Data Loaded </h5>
+            <a href="#" onclick="loadData()" class="btn btn-primary">Load Products</a>
+        </div>
+    </div>
+</div>
+
+    <script>
+    async function loadData() {
+        const response = await fetch('http://localhost:5000/WeatherForecast');
+        const myJson = await response.json();
+        createListWithInnerHTML(myJson)
+    }
+
+    function createListWithInnerHTML(list) {
+        const listDiv = document.getElementById("listDiv");
+        const rows = list.map(item => {
+            return `
+                <div class="card" style="min-width:200px;margin:5px">
+                    <div class="card-body">
+                        <p class="card-text">${item.date} $</p>
+                        <p class="card-text">${item.temperatureC} $</p>
+                        <p class="card-text">${item.temperatureF} $</p>
+                        <p class="card-text">${item.summary} $</p>
+                    </div>
+                </div>`;
+        });
+        const html = rows.join();
+        listDiv.innerHTML = html
+    }
+</script>
