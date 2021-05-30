@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -11,6 +13,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using ZNetCS.AspNetCore.Authentication.Basic;
+using ZNetCS.AspNetCore.Authentication.Basic.Events;
 
 namespace WebApi
 {
@@ -26,11 +30,43 @@ namespace WebApi
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+                        // configure basic authentication 
+            services
+                .AddAuthentication(BasicAuthenticationDefaults.AuthenticationScheme)
+                .AddBasicAuthentication(
+                options =>
+                {
+                    options.Realm = "My Application";
+                    options.Events = new BasicAuthenticationEvents
+                    {
+                        OnValidatePrincipal = context =>
+                        {
+                            
+                                var claims = new List<Claim>
+                        {
+                            new Claim(ClaimTypes.Name,
+                                    context.UserName,
+                                    context.Options.ClaimsIssuer)
+                        };
+                                var principal = new ClaimsPrincipal(new ClaimsIdentity(
+                                    claims,
+                                    BasicAuthenticationDefaults.AuthenticationScheme));
+                                var ticket = new AuthenticationTicket(principal,
+                                    new Microsoft.AspNetCore.Authentication.AuthenticationProperties(),
+                                    BasicAuthenticationDefaults.AuthenticationScheme);
+                                context.Principal = principal;
+                                return Task.FromResult(AuthenticateResult.Success(ticket));
+                            
+
+                        }
+                    };
+                });
             services.AddControllers();
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApi", Version = "v1" });
             });
+            services.AddCors(policy => policy.AddPolicy("AllowAuthPolicy", builder => builder.WithOrigins("https://localhost:5002").AllowCredentials()));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -45,8 +81,11 @@ namespace WebApi
 
             app.UseHttpsRedirection();
 
+            app.UseCors("AllowAuthPolicy");
+
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
