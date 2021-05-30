@@ -31,6 +31,7 @@ namespace WebApi
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApi", Version = "v1" });
             });
+            services.AddCors(policy => policy.AddPolicy("GranularPolicy", builder => builder.AllowAnyOrigin().WithMethods("GET").WithHeaders("CONTENT-TYPE")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -46,6 +47,8 @@ namespace WebApi
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseCors();
 
             app.UseAuthorization();
 
