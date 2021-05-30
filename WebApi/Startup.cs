@@ -31,6 +31,7 @@ namespace WebApi
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApi", Version = "v1" });
             });
+            services.AddCors(policy => policy.AddPolicy("WildCordPolicy", builder => builder.WithOrigins("https://*.localhost:5002").SetIsOriginAllowedToAllowWildcardSubdomains()));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,6 +45,8 @@ namespace WebApi
             }
 
             app.UseHttpsRedirection();
+
+            app.UseCors("WildCordPolicy");
 
             app.UseRouting();
 
