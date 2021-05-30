@@ -31,6 +31,13 @@ namespace WebApi
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApi", Version = "v1" });
             });
+            services.AddCors(policy => policy.AddPolicy("DynamicPolicy", builder => builder.SetIsOriginAllowed(CheckAllowedOrigins)));
+        }
+
+        private bool CheckAllowedOrigins(string host)
+        {
+            var validOrigins = new[] { "https://localhost:5002" };
+            return validOrigins.Any(origin => host.Contains(origin));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,6 +51,8 @@ namespace WebApi
             }
 
             app.UseHttpsRedirection();
+
+            app.UseCors("DynamicPolicy");
 
             app.UseRouting();
 
